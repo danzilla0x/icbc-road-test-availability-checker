@@ -61,10 +61,7 @@ func PrettyStruct(data any) (string, error) {
 	return string(val), nil
 }
 
-func main() {
-
-	// Create a Bearer string by appending string access token
-	var bearer = "Bearer " + BEARER_TOKEN // TODO migh be provided in the runtime
+func getAvailableAppointments(bearer string) ([]Appointment, error) {
 
 	payload := RequestPayload{
 		APosID:            0,
@@ -77,13 +74,14 @@ func main() {
 		LicenseNumber:     "",
 	}
 
-	jsonData, _ := json.Marshal(payload)
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+	}
 
-	// Create a new request using http
 	req, err := http.NewRequest("POST", URL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println("Error during creating the request")
-		return
+		return nil, fmt.Errorf("new request failed: %w", err)
 	}
 
 	// add authorization header to the req
@@ -95,23 +93,35 @@ func main() {
 
 	response, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Unsuccessful request: " + err.Error())
-		return
+		return nil, fmt.Errorf("unsuccessful request: %w", err)
 	}
 	defer response.Body.Close()
 
-	// get correct status code
 	if response.StatusCode == http.StatusUnauthorized {
-		fmt.Println("invalid credentials")
-		return
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 	}
 
 	var appointments []Appointment
-
 	err = json.NewDecoder(response.Body).Decode(&appointments)
 	if err != nil {
-		fmt.Println("Unsuccessful JSON decode: " + err.Error())
-		return
+		return nil, fmt.Errorf("unsuccessful JSON decode: %w", err)
+	}
+
+	return appointments, nil
+}
+
+func main() {
+
+	// Create a Bearer string by appending string access token
+	var bearer = "Bearer " + BEARER_TOKEN // TODO migh be provided in the runtime
+
+	appointments, err := getAvailableAppointments(bearer)
+	if err != nil {
+		fmt.Println("Internal error: " + err.Error())
 	}
 
 	res, err := PrettyStruct(appointments)
