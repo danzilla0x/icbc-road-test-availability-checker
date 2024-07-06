@@ -5,15 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
-
-// Request the road test availability in Port Coquitlam
-// POST request
-//  URL: https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments
-// 	Data: in example
-// Headers:
-//	Authorization: Bearer
-//  User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36
 
 const (
 	URL          = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
@@ -62,11 +55,12 @@ func PrettyStruct(data any) (string, error) {
 }
 
 func getAvailableAppointments(bearer string) ([]Appointment, error) {
+	tomorrow := time.Now().Add(24 * time.Hour).Format("2006-01-02")
 
 	payload := RequestPayload{
 		APosID:            0,
 		ExamType:          "5-R-1",
-		ExamData:          "2024-07-06", // TODO update date to tommorow
+		ExamData:          tomorrow,
 		IgnoreReserveTime: false,
 		PrfDaysOfWeek:     "[0,1,2,3,4,5,6]",
 		PrfPartsOfDay:     "[0,1]",
@@ -84,7 +78,6 @@ func getAvailableAppointments(bearer string) ([]Appointment, error) {
 		return nil, fmt.Errorf("new request failed: %w", err)
 	}
 
-	// add authorization header to the req
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", bearer)
 	req.Header.Add("User-Agent", USER_AGENT)
@@ -115,8 +108,6 @@ func getAvailableAppointments(bearer string) ([]Appointment, error) {
 }
 
 func main() {
-
-	// Create a Bearer string by appending string access token
 	var bearer = "Bearer " + BEARER_TOKEN // TODO migh be provided in the runtime
 
 	appointments, err := getAvailableAppointments(bearer)
