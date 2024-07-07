@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 const (
-	URL          = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
-	BEARER_TOKEN = ""
-	USER_AGENT   = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+	URL = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
 )
 
 type RequestPayload struct {
@@ -54,18 +56,18 @@ func PrettyStruct(data any) (string, error) {
 	return string(val), nil
 }
 
-func getAvailableAppointments(bearer string) ([]Appointment, error) {
+func getAvailableAppointments(aPosID int32, lastName, licenseNumber, bearer, userAgent string) ([]Appointment, error) {
 	tomorrow := time.Now().Add(24 * time.Hour).Format("2006-01-02")
 
 	payload := RequestPayload{
-		APosID:            0,
+		APosID:            aPosID,
 		ExamType:          "5-R-1",
 		ExamData:          tomorrow,
 		IgnoreReserveTime: false,
 		PrfDaysOfWeek:     "[0,1,2,3,4,5,6]",
 		PrfPartsOfDay:     "[0,1]",
-		LastName:          "",
-		LicenseNumber:     "",
+		LastName:          lastName,
+		LicenseNumber:     licenseNumber,
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -80,7 +82,7 @@ func getAvailableAppointments(bearer string) ([]Appointment, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", bearer)
-	req.Header.Add("User-Agent", USER_AGENT)
+	req.Header.Add("User-Agent", userAgent)
 
 	client := &http.Client{}
 
@@ -108,9 +110,25 @@ func getAvailableAppointments(bearer string) ([]Appointment, error) {
 }
 
 func main() {
-	var bearer = "Bearer " + BEARER_TOKEN // TODO migh be provided in the runtime
+	err := godotenv.Load("config.env")
+	if err != nil {
+		fmt.Println("Error loading .env file")
+		return
+	}
 
-	appointments, err := getAvailableAppointments(bearer)
+	bearerToken := os.Getenv("APP_BEARER_TOKEN")
+	userAgent := os.Getenv("APP_USER_AGENT")
+	aPosIDStr := os.Getenv("APP_APPOINTMENT_POSITION_ID")
+	lastName := os.Getenv("APP_LAST_NAME")
+	licenseNumber := os.Getenv("APP_LICENSE_NUMBER")
+
+	aPosID, err := strconv.ParseInt(aPosIDStr, 10, 32)
+	if err != nil {
+		panic("aPosID is incorecrly set: " + err.Error())
+	}
+	var bearer = "Bearer " + bearerToken
+
+	appointments, err := getAvailableAppointments(int32(aPosID), lastName, licenseNumber, bearer, userAgent)
 	if err != nil {
 		fmt.Println("Internal error: " + err.Error())
 	}
