@@ -38,6 +38,10 @@ func GetBearerToken(lastName, licenceNumber, keyword, userAgent string) (string,
 	req.Header.Add("User-Agent", userAgent)
 	req.Header.Add("Referer", "https://onlinebusiness.icbc.com/webdeas-ui/login;type=driver")
 	req.Header.Add("Cache-Control", "no-cache, no-store")
+	req.Header.Add("Pragma", "no-cache")
+	req.Header.Add("Expires", "0")
+	req.Header.Add("Sec-Ch-Ua-Platform", "macOS")
+	req.Header.Add("Sec-Ch-Ua", "Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Brave\";v=\"126\"")
 
 	client := &http.Client{}
 
