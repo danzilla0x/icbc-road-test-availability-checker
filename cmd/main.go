@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	LOGIN_URL        = "https://onlinebusiness.icbc.com/deas-api/v1/webLogin/webLogin"
 	APPOINTMENTS_URL = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
 )
 
@@ -68,7 +69,7 @@ func main() {
 		panic("aPosID is incorecrly set: " + err.Error())
 	}
 
-	bearerToken, err := auth.GetBearerToken(lastName, licenseNumber, keyword, userAgent)
+	bearerToken, err := auth.GetBearerToken(LOGIN_URL, lastName, licenseNumber, keyword, userAgent)
 	if err != nil {
 		fmt.Println("Login error: " + err.Error())
 		return

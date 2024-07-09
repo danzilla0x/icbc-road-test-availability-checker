@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-)
-
-const (
-	LOGIN_URL = "https://onlinebusiness.icbc.com/deas-api/v1/webLogin/webLogin"
 )
 
 type LoginPayload struct {
@@ -17,7 +14,7 @@ type LoginPayload struct {
 	Keyword       string `json:"keyword"`
 }
 
-func GetBearerToken(lastName, licenceNumber, keyword, userAgent string) (string, error) {
+func GetBearerToken(loginUrl, lastName, licenceNumber, keyword, userAgent string) (string, error) {
 	payload := LoginPayload{
 		DrvrLastName:  lastName,
 		LicenceNumber: licenceNumber,
@@ -29,7 +26,7 @@ func GetBearerToken(lastName, licenceNumber, keyword, userAgent string) (string,
 		return "", fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	req, err := http.NewRequest("PUT", LOGIN_URL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("PUT", loginUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("new request failed: %w", err)
 	}
@@ -51,12 +48,16 @@ func GetBearerToken(lastName, licenceNumber, keyword, userAgent string) (string,
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusUnauthorized {
-		return "", fmt.Errorf("invalid credentials")
+	if response.StatusCode == http.StatusBadRequest {
+		body, err := io.ReadAll(response.Body)
+		if err != nil {
+			return "", fmt.Errorf("bad request")
+		}
+		return "", fmt.Errorf("bad request: %s", body)
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("bad status: %s, status code: %d", response.Status, response.StatusCode)
+		return "", fmt.Errorf("invalid credentials")
 	}
 
 	return response.Header.Get("Authorization"), nil
