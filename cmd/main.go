@@ -71,6 +71,7 @@ func main() {
 	bearerToken, err := auth.GetBearerToken(lastName, licenseNumber, keyword, userAgent)
 	if err != nil {
 		fmt.Println("Login error: " + err.Error())
+		return
 	}
 
 	appointments, err := getAvailableAppointments(int32(aPosID), lastName, licenseNumber, bearerToken, userAgent)
