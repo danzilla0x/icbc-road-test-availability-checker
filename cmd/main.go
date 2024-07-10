@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 	"icbc-checker/internal/appointment"
 	"icbc-checker/internal/auth"
+	"icbc-checker/pkg/utils"
 )
 
 const (
@@ -44,9 +44,10 @@ func main() {
 	appointments, err := appointment.GetAvailableAppointments(APPOINTMENTS_URL, int32(aPosID), lastName, licenseNumber, bearerToken, userAgent)
 	if err != nil {
 		fmt.Println("Get appointments error: " + err.Error())
+		return
 	}
 
-	res, err := PrettyStruct(appointments)
+	res, err := utils.PrettyStruct(appointments)
 	if err != nil {
 		fmt.Println("PrettyStruct didn't work: " + err.Error())
 	}
@@ -54,10 +55,3 @@ func main() {
 	fmt.Println(res)
 }
 
-func PrettyStruct(data any) (string, error) {
-	val, err := json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		return "", err
-	}
-	return string(val), nil
-}
