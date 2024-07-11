@@ -92,3 +92,12 @@ func GetAvailableAppointments(appointmentUrl string, aPosID int32, lastName, lic
 
 	return appointments, nil
 }
+
+func FindExamAppointment(appointments []Appointment, lastDate string) (string, error) {
+	// Check the most recent date only for now
+	if len(appointments) <= 0 || appointments[0].AppointmentDt.Date > lastDate {
+		return "", fmt.Errorf("no available appointments before " + lastDate)
+	}
+
+	return appointments[0].AppointmentDt.Date, nil
+}
