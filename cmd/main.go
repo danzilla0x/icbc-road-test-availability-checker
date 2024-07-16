@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -52,29 +54,35 @@ func main() {
 		fmt.Println("Pushover key is not provided.")
 	}
 
-	bearerToken, err := auth.GetBearerToken(LOGIN_URL, lastName, licenseNumber, keyword, userAgent)
-	if err != nil {
-		fmt.Println("Login error: " + err.Error())
-		return
-	}
+	for {
+		bearerToken, err := auth.GetBearerToken(LOGIN_URL, lastName, licenseNumber, keyword, userAgent)
+		if err != nil {
+			fmt.Println("Login error: " + err.Error())
+			return
+		}
 
-	appointments, err := appointment.GetAvailableAppointments(APPOINTMENTS_URL, int32(aPosID), lastName, licenseNumber, bearerToken, userAgent)
-	if err != nil {
-		fmt.Println("Get appointments error: " + err.Error())
-		return
-	}
+		for {
+			appointments, err := appointment.GetAvailableAppointments(APPOINTMENTS_URL, int32(aPosID), lastName, licenseNumber, bearerToken, userAgent)
+			if err != nil {
+				fmt.Println("Get appointments error: " + err.Error())
+				return
+			}
 
-	availableExamDate, err := appointment.FindExamAppointment(appointments, examLastDate)
-	if err != nil {
-		fmt.Println("Upsss: " + err.Error())
-		return
-	}
+			availableExamDate, err := appointment.FindExamAppointment(appointments, examLastDate)
+			if err != nil {
+				waitInterval := rand.Intn(10) + 10
+				fmt.Printf("Upsss: %s. Sleep for %d seconds.\n", err.Error(), waitInterval)
+				time.Sleep(time.Duration(waitInterval) * time.Second)
+				continue
+			}
 
-	fmt.Println("Exam date: " + availableExamDate)
+			err = notification.SendNotification(pushoverUserKey, pushoverApiToken, availableExamDate)
+			if err != nil {
+				fmt.Println("Failed to send notification: " + err.Error())
+				return
+			}
 
-	err = notification.SendNotification(pushoverUserKey, pushoverApiToken, availableExamDate)
-	if err != nil {
-		fmt.Println("Failed to send notification: " + err.Error())
-		return
+			return
+		}
 	}
 }
