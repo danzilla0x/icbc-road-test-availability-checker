@@ -77,7 +77,11 @@ func GetAvailableAppointments(appointmentUrl string, aPosID int32, lastName, lic
 	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusUnauthorized {
-		return nil, fmt.Errorf("invalid credentials")
+		return nil, fmt.Errorf("invalid authentication credentials")
+	}
+
+	if response.StatusCode == http.StatusForbidden {
+		return nil, fmt.Errorf("authentication has expired")
 	}
 
 	if response.StatusCode != http.StatusOK {
