@@ -93,11 +93,15 @@ func GetAvailableAppointments(appointmentUrl string, aPosID int32, lastName, lic
 	return appointments, nil
 }
 
-func FindExamAppointment(appointments []Appointment, lastDate string) (string, error) {
+func FindExamAppointment(appointments []Appointment, startDate, lastDate string) (string, error) {
 	// Check the most recent date only for now
-	if len(appointments) <= 0 || appointments[0].AppointmentDt.Date > lastDate {
-		return "", fmt.Errorf("no available appointments before " + lastDate)
+	if len(appointments) <= 0 || !isSuitableDate(appointments[0].AppointmentDt.Date, startDate, lastDate) {
+		return "", fmt.Errorf("no available appointments between %s and %s", startDate, lastDate)
 	}
 
 	return appointments[0].AppointmentDt.Date, nil
+}
+
+func isSuitableDate(examDate, startDate, lastDate string) bool {
+	return examDate > startDate && examDate < lastDate
 }

@@ -3,6 +3,7 @@ package appointment
 import (
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func TestFindTargetAppointment(t *testing.T) {
@@ -57,6 +58,8 @@ func TestFindTargetAppointment(t *testing.T) {
 		},
 	}
 
+	today := time.Now().Format("2006-01-02")
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var appointments []Appointment
@@ -65,7 +68,7 @@ func TestFindTargetAppointment(t *testing.T) {
 				t.Errorf("failed to unmarshel test json into []Appointment, err: " + err.Error())
 			}
 
-			availableExamDate, err := FindExamAppointment(appointments, tc.examLastDate)
+			availableExamDate, err := FindExamAppointment(appointments, today, tc.examLastDate)
 			if (err != nil) == tc.expectedFound {
 				t.Errorf("expected appointment present: %v, got: %v", tc.expectedFound, err)
 			}

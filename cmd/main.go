@@ -33,6 +33,10 @@ func main() {
 		panic("aPosID is incorecrly set: " + err.Error())
 	}
 	userAgent := os.Getenv("APP_USER_AGENT")
+	examStartDate := os.Getenv("APP_EXAM_START_DATE")
+	if examStartDate == "" {
+		examStartDate = time.Now().Format("2006-01-02")
+	}
 	examLastDate := os.Getenv("APP_EXAM_LAST_DATE")
 	lastName := os.Getenv("APP_LAST_NAME")
 	if lastName == "" {
@@ -69,7 +73,7 @@ func main() {
 				break
 			}
 
-			availableExamDate, err := appointment.FindExamAppointment(appointments, examLastDate)
+			availableExamDate, err := appointment.FindExamAppointment(appointments, examStartDate, examLastDate)
 			if err != nil {
 				waitInterval := rand.Intn(20) + MIN_WAIT_INTERVAL
 				fmt.Printf("Upsss: %s. Sleep for %d seconds.\n", err.Error(), waitInterval)
