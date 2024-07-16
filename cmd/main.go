@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	LOGIN_URL        = "https://onlinebusiness.icbc.com/deas-api/v1/webLogin/webLogin"
-	APPOINTMENTS_URL = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
+	LOGIN_URL         = "https://onlinebusiness.icbc.com/deas-api/v1/webLogin/webLogin"
+	APPOINTMENTS_URL  = "https://onlinebusiness.icbc.com/deas-api/v1/web/getAvailableAppointments"
+	MIN_WAIT_INTERVAL = 20
 )
 
 func main() {
@@ -65,12 +66,12 @@ func main() {
 			appointments, err := appointment.GetAvailableAppointments(APPOINTMENTS_URL, int32(aPosID), lastName, licenseNumber, bearerToken, userAgent)
 			if err != nil {
 				fmt.Println("Get appointments error: " + err.Error())
-				return
+				break
 			}
 
 			availableExamDate, err := appointment.FindExamAppointment(appointments, examLastDate)
 			if err != nil {
-				waitInterval := rand.Intn(10) + 10
+				waitInterval := rand.Intn(20) + MIN_WAIT_INTERVAL
 				fmt.Printf("Upsss: %s. Sleep for %d seconds.\n", err.Error(), waitInterval)
 				time.Sleep(time.Duration(waitInterval) * time.Second)
 				continue
@@ -79,7 +80,6 @@ func main() {
 			err = notification.SendNotification(pushoverUserKey, pushoverApiToken, availableExamDate)
 			if err != nil {
 				fmt.Println("Failed to send notification: " + err.Error())
-				return
 			}
 
 			return
