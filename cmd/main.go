@@ -23,8 +23,7 @@ const (
 func main() {
 	err := godotenv.Load("config.env")
 	if err != nil {
-		fmt.Println("Error loading .env file")
-		return
+		fmt.Println("config.env not found, using default environment variables")
 	}
 
 	aPosIDStr := os.Getenv("APP_APPOINTMENT_POSITION_ID")
