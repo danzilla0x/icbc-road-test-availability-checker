@@ -1,7 +1,9 @@
 FROM alpine:latest
 
 RUN mkdir /app
-COPY ./dist/icbc-checker /app/
 
 WORKDIR /app
+
+COPY dist/icbc-checker .
+
 CMD ["./icbc-checker"]
